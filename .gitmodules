@@ -1,0 +1,3 @@
+[submodule "lib/DenshoBato"]
+	path = lib/DenshoBato
+	url = git@github.com:cubicYYY/DenshoBato.git

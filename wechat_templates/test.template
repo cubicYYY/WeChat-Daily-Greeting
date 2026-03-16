@@ -1,0 +1,6 @@
+当地时间：{{wlafayette_time.DATA}}
+北京时间：{{beijing_time.DATA}}
+今日天气：
+   - 西拉法叶：{{wlafayette_weather.DATA}}
+   - 杭州：{{hangzhou_weather.DATA}}
+留言：{{plus_sentence.DATA}}

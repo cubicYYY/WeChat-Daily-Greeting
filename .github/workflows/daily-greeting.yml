@@ -1,0 +1,31 @@
+name: Daily Greeting
+
+on:
+  schedule:
+    # 00:00 UTC = 08:00 Beijing time (UTC+8)
+    - cron: "0 0 * * *"
+  workflow_dispatch: # Allow manual trigger for testing
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Send daily greeting
+        env:
+          WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
+          WECHAT_SECRET: ${{ secrets.WECHAT_SECRET }}
+          WECHAT_USER_ID: ${{ secrets.WECHAT_USER_ID }}
+          WECHAT_TEMPLATE_ID: ${{ secrets.WECHAT_TEMPLATE_ID }}
+        run: uv run python -m ybot.send_now
