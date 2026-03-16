@@ -11,7 +11,7 @@ from ybot.weather import hangzhou_weather, wlafayette_weather
 
 load_dotenv()
 
-now_local = datetime.now()
+now_local = datetime.now(ZoneInfo("America/Indiana/Indianapolis"))
 now_beijing = datetime.now(ZoneInfo("Asia/Shanghai"))
 
 dispatcher = WeChatDispatcher(

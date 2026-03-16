@@ -18,6 +18,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
+WLAFAYETTE = ZoneInfo("America/Indiana/Indianapolis")
 BEIJING = ZoneInfo("Asia/Shanghai")
 
 
@@ -28,7 +29,7 @@ class DynamicDispatcher(Dispatcher):
         self._inner = inner
 
     def send(self, payload: dict) -> None:
-        now_local = datetime.now()
+        now_local = datetime.now(WLAFAYETTE)
         now_beijing = datetime.now(BEIJING)
         payload = {
             **payload,
