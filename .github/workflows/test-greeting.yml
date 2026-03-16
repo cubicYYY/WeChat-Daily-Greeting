@@ -1,6 +1,7 @@
 name: Test Greeting
 
 on:
+  push:
   workflow_dispatch:
 
 env:
