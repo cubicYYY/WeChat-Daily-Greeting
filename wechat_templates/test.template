@@ -5,4 +5,8 @@
    - 杭州：{{hangzhou_weather.DATA}}
    - 西拉法叶：{{wlafayette_weather.DATA}}
 
+空气质量：
+   - 杭州：{{hangzhou_aqi.DATA}}
+   - 西拉法叶：{{wlafayette_aqi.DATA}}
+
 留言：{{plus_sentence.DATA}}

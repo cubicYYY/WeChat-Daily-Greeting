@@ -9,7 +9,7 @@ from densho_bato.dispatchers.base import Dispatcher
 from densho_bato.schedulers import Cron
 from dotenv import load_dotenv
 
-from ybot.weather import hangzhou_weather, wlafayette_weather
+from ybot.weather import hangzhou_aqi, hangzhou_weather, wlafayette_aqi, wlafayette_weather
 
 load_dotenv()
 
@@ -39,6 +39,8 @@ class DynamicDispatcher(Dispatcher):
                 "beijing_time": {"value": now_beijing.strftime("%Y-%m-%d %H:%M:%S")},
                 "wlafayette_weather": {"value": wlafayette_weather()},
                 "hangzhou_weather": {"value": hangzhou_weather()},
+                "wlafayette_aqi": {"value": wlafayette_aqi()},
+                "hangzhou_aqi": {"value": hangzhou_aqi()},
             },
         }
         self._inner.send(payload)

@@ -1,4 +1,4 @@
-"""Fetch weather from Open-Meteo (free, no API key required)."""
+"""Fetch weather and AQI from Open-Meteo (free, no API key required)."""
 
 import requests
 
@@ -65,9 +65,51 @@ def get_weather(lat: float, lon: float) -> str:
     return f"{desc} {cur_temp}°C （最高{high}°C 最低{low}°C）"
 
 
+# US EPA AQI categories
+AQI_LEVEL_ZH = {
+    (0, 50): "优",
+    (51, 100): "良",
+    (101, 150): "轻度污染",
+    (151, 200): "中度污染",
+    (201, 300): "重度污染",
+    (301, 500): "危险",
+}
+
+
+def _aqi_label(aqi: int) -> str:
+    for (lo, hi), label in AQI_LEVEL_ZH.items():
+        if lo <= aqi <= hi:
+            return label
+    return "未知"
+
+
+def get_aqi(lat: float, lon: float) -> str:
+    """Return AQI string like 'AQI 42 （优）'."""
+    resp = requests.get(
+        "https://air-quality-api.open-meteo.com/v1/air-quality",
+        params={
+            "latitude": lat,
+            "longitude": lon,
+            "current": "us_aqi",
+        },
+        timeout=10,
+    )
+    resp.raise_for_status()
+    aqi = round(resp.json()["current"]["us_aqi"])
+    return f"AQI {aqi} （{_aqi_label(aqi)}）"
+
+
 def wlafayette_weather() -> str:
     return get_weather(*WLAFAYETTE)
 
 
 def hangzhou_weather() -> str:
     return get_weather(*HANGZHOU)
+
+
+def wlafayette_aqi() -> str:
+    return get_aqi(*WLAFAYETTE)
+
+
+def hangzhou_aqi() -> str:
+    return get_aqi(*HANGZHOU)
