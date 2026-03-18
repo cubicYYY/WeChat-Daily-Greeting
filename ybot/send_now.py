@@ -1,5 +1,6 @@
 """One-off script: immediately send a test template message."""
 
+import json
 import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -54,5 +55,15 @@ payload = {
     "data": data,
 }
 
-dispatcher.send(payload)
+print("=== DEBUG: Payload ===")
+print(json.dumps(payload, ensure_ascii=False, indent=2))
+
+# Call wechatpy directly to capture the response
+result = dispatcher._client.message.send_template(
+    user_id=payload["user_id"],
+    template_id=payload["template_id"],
+    data=payload["data"],
+)
+print("=== DEBUG: WeChat API Response ===")
+print(result)
 print("Sent successfully!")

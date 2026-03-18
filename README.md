@@ -88,7 +88,6 @@ wechat_templates/
 | `WECHAT_TEST_USER_ID` | 测试接收者的 OpenID |
 | `WECHAT_TEMPLATE_ID` | 模板消息 ID |
 | `DEFAULT_SENTENCE` | 默认留言（如不设置则为 "Hi!"） |
-| `GH_PAT` | GitHub Fine-grained PAT（见下方） |
 | `CITIES` | 城市列表，格式 `名称,纬度,经度`，多个用 `;` 分隔（如不设置则使用默认值） |
 | `LOCAL_TIMEZONE` | 当地时区，如 `America/Indiana/Indianapolis`（如不设置则使用默认值） |
 | `REMOTE_TIMEZONE` | 对方时区，如 `Asia/Shanghai`（如不设置则使用默认值） |
@@ -97,11 +96,11 @@ wechat_templates/
 
 #### 留言机制
 
-- **`DEFAULT_SENTENCE`**：持久的默认留言，每次发送都会使用
-- **`PLUS_SENTENCE`**：一次性留言，设置后下次**正式问候**发送时使用并自动删除，之后回退到 `DEFAULT_SENTENCE`
-- **测试问候**不会消耗 `PLUS_SENTENCE`，可以放心用来预览
+- **`DEFAULT_SENTENCE`**（Secret）：持久的默认留言，每次发送都会使用
+- **`plus_sentence`**（workflow_dispatch input）：一次性留言，通过 API 或手动触发时传入，仅本次生效，无需清理
+- 未传入 `plus_sentence` 时自动回退到 `DEFAULT_SENTENCE`，再回退到 `"Hi!"`
 
-优先级：`PLUS_SENTENCE` > `DEFAULT_SENTENCE` > `"Hi!"`
+优先级：`plus_sentence`（input） > `DEFAULT_SENTENCE`（secret） > `"Hi!"`
 
 ### 4. 创建 GitHub Fine-grained PAT
 
@@ -109,8 +108,7 @@ wechat_templates/
 2. 创建新 Token，选择此仓库
 3. 权限设置：
    - **Actions**: Read and write（Cloud Scheduler 触发 workflow）
-   - **Secrets**: Read and write（发送后自动删除 `PLUS_SENTENCE`）
-4. 将生成的 Token 保存为仓库 Secret `GH_PAT`
+4. 将生成的 Token 保存，后续配置 Cloud Scheduler 时使用
 
 ### 5. 配置 Google Cloud Scheduler
 
@@ -141,6 +139,21 @@ gcloud scheduler jobs create http ybot-daily-greeting \
 ```
 
 将上面的 `YOUR_PROJECT_ID`、`OWNER/REPO`、`YOUR_GH_PAT` 替换为实际值。
+
+#### 发送自定义留言
+
+通过 API 传入 `plus_sentence` 参数即可发送一次性留言（不影响后续发送）：
+
+```bash
+curl -L -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer YOUR_GH_PAT" \
+  -H "X-GitHub-Api-Version: 2026-03-10" \
+  https://api.github.com/repos/OWNER/REPO/actions/workflows/daily-greeting.yml/dispatches \
+  -d '{"ref":"main","inputs":{"plus_sentence":"想你了"}}'
+```
+
+不传 `inputs` 或留空则使用 `DEFAULT_SENTENCE`。
 
 #### 验证
 

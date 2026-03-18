@@ -3,6 +3,11 @@ name: Test Greeting
 on:
   push:
   workflow_dispatch:
+    inputs:
+      plus_sentence:
+        description: "One-time message (leave empty to use default)"
+        required: false
+        default: ""
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -29,7 +34,7 @@ jobs:
           WECHAT_SECRET: ${{ secrets.WECHAT_SECRET }}
           WECHAT_USER_ID: ${{ secrets.WECHAT_TEST_USER_ID }}
           WECHAT_TEMPLATE_ID: ${{ secrets.WECHAT_TEMPLATE_ID }}
-          PLUS_SENTENCE: ${{ secrets.PLUS_SENTENCE }}
+          PLUS_SENTENCE: ${{ inputs.plus_sentence }}
           DEFAULT_SENTENCE: ${{ secrets.DEFAULT_SENTENCE }}
           CITIES: ${{ secrets.CITIES }}
           LOCAL_TIMEZONE: ${{ secrets.LOCAL_TIMEZONE }}
