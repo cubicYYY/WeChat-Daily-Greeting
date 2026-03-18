@@ -36,7 +36,6 @@ jobs:
         run: uv run python -m ybot.send_now
 
       - name: Consume plus sentence after use
-        if: secrets.PLUS_SENTENCE != ''
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: gh secret delete PLUS_SENTENCE
+        run: echo -n "" | gh secret set PLUS_SENTENCE
