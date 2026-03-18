@@ -3,8 +3,6 @@ name: Test Greeting
 on:
   push:
   workflow_dispatch:
-  schedule:
-    - cron: '55 23 * * *'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -32,4 +30,8 @@ jobs:
           WECHAT_USER_ID: ${{ secrets.WECHAT_TEST_USER_ID }}
           WECHAT_TEMPLATE_ID: ${{ secrets.WECHAT_TEMPLATE_ID }}
           PLUS_SENTENCE: ${{ secrets.PLUS_SENTENCE }}
+          DEFAULT_SENTENCE: ${{ secrets.DEFAULT_SENTENCE }}
+          CITIES: ${{ secrets.CITIES }}
+          LOCAL_TIMEZONE: ${{ secrets.LOCAL_TIMEZONE }}
+          REMOTE_TIMEZONE: ${{ secrets.REMOTE_TIMEZONE }}
         run: uv run python -m ybot.send_now

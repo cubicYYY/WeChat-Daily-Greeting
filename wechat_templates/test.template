@@ -1,12 +1,12 @@
-当地时间：{{wlafayette_time.DATA}}
-北京时间：{{beijing_time.DATA}}
+当地时间：{{local_time.DATA}}
+北京时间：{{remote_time.DATA}}
 
 今日天气：
-   - 杭州：{{hangzhou_weather.DATA}}
-   - 西拉法叶：{{wlafayette_weather.DATA}}
+   - {{city1_name.DATA}}：{{city1_weather.DATA}}
+   - {{city2_name.DATA}}：{{city2_weather.DATA}}
 
 空气质量：
-   - 杭州：{{hangzhou_aqi.DATA}}
-   - 西拉法叶：{{wlafayette_aqi.DATA}}
+   - {{city1_name.DATA}}：{{city1_aqi.DATA}}
+   - {{city2_name.DATA}}：{{city2_aqi.DATA}}
 
 留言：{{plus_sentence.DATA}}

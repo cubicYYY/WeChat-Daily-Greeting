@@ -1,5 +1,7 @@
 """Fetch weather and AQI from Open-Meteo (free, no API key required)."""
 
+from dataclasses import dataclass
+
 import requests
 
 WMO_ZH = {
@@ -33,14 +35,37 @@ WMO_ZH = {
     99: "强雷暴+冰雹",
 }
 
-# West Lafayette, IN
-WLAFAYETTE = (40.4259, -86.9081)
-# Hangzhou, China
-HANGZHOU = (30.2741, 120.1551)
+# US EPA AQI categories
+AQI_LEVEL_ZH = {
+    (0, 50): "优",
+    (51, 100): "良",
+    (101, 150): "轻度污染",
+    (151, 200): "中度污染",
+    (201, 300): "重度污染",
+    (301, 500): "危险",
+}
+
+
+@dataclass
+class City:
+    name: str
+    lat: float
+    lon: float
+
+
+def parse_cities(raw: str) -> list[City]:
+    """Parse 'name,lat,lon;name,lat,lon' into a list of City."""
+    cities = []
+    for entry in raw.split(";"):
+        name, lat, lon = entry.strip().split(",")
+        cities.append(
+            City(name=name.strip(), lat=float(lat), lon=float(lon))
+        )
+    return cities
 
 
 def get_weather(lat: float, lon: float) -> str:
-    """Return weather string like '晴 5℃ 最高12℃ 最低-1℃'."""
+    """Return weather string like '晴 5°C （最高12°C 最低-1°C）'."""
     resp = requests.get(
         "https://api.open-meteo.com/v1/forecast",
         params={
@@ -65,17 +90,6 @@ def get_weather(lat: float, lon: float) -> str:
     return f"{desc} {cur_temp}°C （最高{high}°C 最低{low}°C）"
 
 
-# US EPA AQI categories
-AQI_LEVEL_ZH = {
-    (0, 50): "优",
-    (51, 100): "良",
-    (101, 150): "轻度污染",
-    (151, 200): "中度污染",
-    (201, 300): "重度污染",
-    (301, 500): "危险",
-}
-
-
 def _aqi_label(aqi: int) -> str:
     for (lo, hi), label in AQI_LEVEL_ZH.items():
         if lo <= aqi <= hi:
@@ -97,19 +111,3 @@ def get_aqi(lat: float, lon: float) -> str:
     resp.raise_for_status()
     aqi = round(resp.json()["current"]["us_aqi"])
     return f"AQI {aqi} （{_aqi_label(aqi)}）"
-
-
-def wlafayette_weather() -> str:
-    return get_weather(*WLAFAYETTE)
-
-
-def hangzhou_weather() -> str:
-    return get_weather(*HANGZHOU)
-
-
-def wlafayette_aqi() -> str:
-    return get_aqi(*WLAFAYETTE)
-
-
-def hangzhou_aqi() -> str:
-    return get_aqi(*HANGZHOU)

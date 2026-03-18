@@ -9,12 +9,7 @@ from densho_bato.dispatchers.base import Dispatcher
 from densho_bato.schedulers import Cron
 from dotenv import load_dotenv
 
-from ybot.weather import (
-    hangzhou_aqi,
-    hangzhou_weather,
-    wlafayette_aqi,
-    wlafayette_weather,
-)
+from ybot.weather import get_aqi, get_weather, parse_cities
 
 load_dotenv()
 
@@ -23,32 +18,59 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
-WLAFAYETTE = ZoneInfo("America/Indiana/Indianapolis")
-BEIJING = ZoneInfo("Asia/Shanghai")
+LOCAL_TZ = ZoneInfo(
+    os.environ.get("LOCAL_TIMEZONE", "America/Indiana/Indianapolis")
+)
+REMOTE_TZ = ZoneInfo(
+    os.environ.get("REMOTE_TIMEZONE", "Asia/Shanghai")
+)
+CITIES = parse_cities(
+    os.environ.get(
+        "CITIES",
+        "西拉法叶,40.4259,-86.9081;杭州,30.2741,120.1551",
+    )
+)
+
+
+def _parse_schedule(raw: str) -> str:
+    """Convert 'HH:MM' or cron expression to cron string."""
+    raw = raw.strip()
+    if ":" in raw and " " not in raw:
+        h, m = raw.split(":")
+        return f"{int(m)} {int(h)} * * *"
+    return raw
+
+
+SCHEDULE = _parse_schedule(os.environ.get("SEND_TIME", "08:00"))
 
 
 class DynamicDispatcher(Dispatcher):
-    """Wraps WeChatDispatcher, injecting dynamic timestamps and weather."""
+    """Wraps WeChatDispatcher, injecting dynamic data."""
 
     def __init__(self, inner: WeChatDispatcher) -> None:
         self._inner = inner
 
     def send(self, payload: dict) -> None:
-        now_local = datetime.now(WLAFAYETTE)
-        now_beijing = datetime.now(BEIJING)
-        payload = {
-            **payload,
-            "data": {
-                **payload["data"],
-                "wlafayette_time": {"value": now_local.strftime("%Y-%m-%d %H:%M:%S")},
-                "beijing_time": {"value": now_beijing.strftime("%Y-%m-%d %H:%M:%S")},
-                "wlafayette_weather": {"value": wlafayette_weather()},
-                "hangzhou_weather": {"value": hangzhou_weather()},
-                "wlafayette_aqi": {"value": wlafayette_aqi()},
-                "hangzhou_aqi": {"value": hangzhou_aqi()},
+        now_local = datetime.now(LOCAL_TZ)
+        now_remote = datetime.now(REMOTE_TZ)
+        data = {
+            **payload["data"],
+            "local_time": {
+                "value": now_local.strftime("%Y-%m-%d %H:%M:%S"),
+            },
+            "remote_time": {
+                "value": now_remote.strftime("%Y-%m-%d %H:%M:%S"),
             },
         }
-        self._inner.send(payload)
+        for i, city in enumerate(CITIES, 1):
+            data[f"city{i}_name"] = {"value": city.name}
+            data[f"city{i}_weather"] = {
+                "value": get_weather(city.lat, city.lon),
+            }
+            data[f"city{i}_aqi"] = {
+                "value": get_aqi(city.lat, city.lon),
+            }
+        self._inner.send({**payload, "data": data})
 
 
 def main() -> None:
@@ -57,19 +79,27 @@ def main() -> None:
     user_id = os.environ["WECHAT_USER_ID"]
     template_id = os.environ["WECHAT_TEMPLATE_ID"]
 
-    dispatcher = DynamicDispatcher(WeChatDispatcher(appid=appid, secret=secret))
-    scheduler = Cron("0 8 * * *", tz=BEIJING)
+    dispatcher = DynamicDispatcher(
+        WeChatDispatcher(appid=appid, secret=secret)
+    )
+    scheduler = Cron(SCHEDULE, tz=REMOTE_TZ)
 
     payload = {
         "user_id": user_id,
         "template_id": template_id,
-        "data": {"plus_sentence": {"value": os.environ.get("PLUS_SENTENCE", "Hi!")}},
+        "data": {
+            "plus_sentence": {
+                "value": os.environ.get("PLUS_SENTENCE")
+                or os.environ.get("DEFAULT_SENTENCE")
+                or "Hi!"
+            }
+        },
     }
 
     svc = Service()
     svc.add_job(scheduler, dispatcher, payload)
 
-    logging.getLogger(__name__).info("ybot started — sending Hi! daily at 08:00 CST")
+    logging.getLogger(__name__).info("ybot started")
     svc.run_sync()
 
 

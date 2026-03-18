@@ -7,35 +7,58 @@ from zoneinfo import ZoneInfo
 from densho_bato.dispatchers import WeChatDispatcher
 from dotenv import load_dotenv
 
-from ybot.weather import (
-    hangzhou_aqi,
-    hangzhou_weather,
-    wlafayette_aqi,
-    wlafayette_weather,
-)
+from ybot.weather import get_aqi, get_weather, parse_cities
 
 load_dotenv()
 
-now_local = datetime.now(ZoneInfo("America/Indiana/Indianapolis"))
-now_beijing = datetime.now(ZoneInfo("Asia/Shanghai"))
+local_tz = ZoneInfo(
+    os.environ.get("LOCAL_TIMEZONE", "America/Indiana/Indianapolis")
+)
+remote_tz = ZoneInfo(
+    os.environ.get("REMOTE_TIMEZONE", "Asia/Shanghai")
+)
+cities = parse_cities(
+    os.environ.get(
+        "CITIES",
+        "西拉法叶,40.4259,-86.9081;杭州,30.2741,120.1551",
+    )
+)
 
 dispatcher = WeChatDispatcher(
     appid=os.environ["WECHAT_APPID"],
     secret=os.environ["WECHAT_SECRET"],
 )
 
+now_local = datetime.now(local_tz)
+now_remote = datetime.now(remote_tz)
+
+data: dict = {
+    "local_time": {
+        "value": now_local.strftime("%Y-%m-%d %H:%M:%S"),
+    },
+    "remote_time": {
+        "value": now_remote.strftime("%Y-%m-%d %H:%M:%S"),
+    },
+    "plus_sentence": {
+        "value": os.environ.get("PLUS_SENTENCE")
+        or os.environ.get("DEFAULT_SENTENCE")
+        or "Hi!"
+    },
+}
+
+for i, city in enumerate(cities, 1):
+    data[f"city{i}_name"] = {"value": city.name}
+    data[f"city{i}_weather"] = {
+        "value": get_weather(city.lat, city.lon),
+    }
+    data[f"city{i}_aqi"] = {
+        "value": get_aqi(city.lat, city.lon),
+    }
+
 payload = {
     "user_id": os.environ["WECHAT_USER_ID"],
     "template_id": os.environ["WECHAT_TEMPLATE_ID"],
-    "data": {
-        "wlafayette_time": {"value": now_local.strftime("%Y-%m-%d %H:%M:%S")},
-        "beijing_time": {"value": now_beijing.strftime("%Y-%m-%d %H:%M:%S")},
-        "wlafayette_weather": {"value": wlafayette_weather()},
-        "hangzhou_weather": {"value": hangzhou_weather()},
-        "wlafayette_aqi": {"value": wlafayette_aqi()},
-        "hangzhou_aqi": {"value": hangzhou_aqi()},
-        "plus_sentence": {"value": os.environ.get("PLUS_SENTENCE", "Hi!")},
-    },
+    "data": data,
 }
 
 dispatcher.send(payload)
