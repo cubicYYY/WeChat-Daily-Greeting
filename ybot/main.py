@@ -18,13 +18,10 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
-LOCAL_TZ = ZoneInfo(os.environ.get("LOCAL_TIMEZONE", "America/Indiana/Indianapolis"))
-REMOTE_TZ = ZoneInfo(os.environ.get("REMOTE_TIMEZONE", "Asia/Shanghai"))
+LOCAL_TZ = ZoneInfo(os.environ.get("LOCAL_TIMEZONE") or "America/Indiana/Indianapolis")
+REMOTE_TZ = ZoneInfo(os.environ.get("REMOTE_TIMEZONE") or "Asia/Shanghai")
 CITIES = parse_cities(
-    os.environ.get(
-        "CITIES",
-        "西拉法叶,40.4259,-86.9081;杭州,30.2741,120.1551",
-    )
+    os.environ.get("CITIES") or "西拉法叶,40.4259,-86.9081;杭州,30.2741,120.1551"
 )
 
 
@@ -37,7 +34,7 @@ def _parse_schedule(raw: str) -> str:
     return raw
 
 
-SCHEDULE = _parse_schedule(os.environ.get("SEND_TIME", "08:00"))
+SCHEDULE = _parse_schedule(os.environ.get("SEND_TIME") or "08:00")
 
 
 class DynamicDispatcher(Dispatcher):

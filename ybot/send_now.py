@@ -11,13 +11,10 @@ from ybot.weather import get_aqi, get_weather, parse_cities
 
 load_dotenv()
 
-local_tz = ZoneInfo(os.environ.get("LOCAL_TIMEZONE", "America/Indiana/Indianapolis"))
-remote_tz = ZoneInfo(os.environ.get("REMOTE_TIMEZONE", "Asia/Shanghai"))
+local_tz = ZoneInfo(os.environ.get("LOCAL_TIMEZONE") or "America/Indiana/Indianapolis")
+remote_tz = ZoneInfo(os.environ.get("REMOTE_TIMEZONE") or "Asia/Shanghai")
 cities = parse_cities(
-    os.environ.get(
-        "CITIES",
-        "西拉法叶,40.4259,-86.9081;杭州,30.2741,120.1551",
-    )
+    os.environ.get("CITIES") or "西拉法叶,40.4259,-86.9081;杭州,30.2741,120.1551"
 )
 
 dispatcher = WeChatDispatcher(
