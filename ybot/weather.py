@@ -78,7 +78,7 @@ def get_weather(lat: float, lon: float) -> str:
         params={
             "latitude": lat,
             "longitude": lon,
-            "current": "temperature_2m,weather_code",
+            "current": "temperature_2m,relative_humidity_2m,weather_code",
             "daily": "temperature_2m_max,temperature_2m_min",
             "timezone": "auto",
             "forecast_days": 1,
@@ -90,11 +90,12 @@ def get_weather(lat: float, lon: float) -> str:
 
     code = data["current"]["weather_code"]
     cur_temp = round(data["current"]["temperature_2m"])
+    humidity = round(data["current"]["relative_humidity_2m"])
     high = round(data["daily"]["temperature_2m_max"][0])
     low = round(data["daily"]["temperature_2m_min"][0])
     desc = WMO_ZH.get(code, f"未知({code})")
 
-    return f"{desc} {cur_temp}°C （最高{high}°C 最低{low}°C）"
+    return f"{desc} {cur_temp}°C 湿度{humidity}%（最高{high}°C 最低{low}°C）"
 
 
 def _aqi_label(aqi: int) -> str:
